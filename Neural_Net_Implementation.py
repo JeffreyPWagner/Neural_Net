@@ -1,4 +1,3 @@
-import numpy as np
 import random
 import math
 
@@ -40,9 +39,9 @@ class Neuron:
 
 
 class NeuralNet:
-    def __init__(self, numInputs, numOutputs, numLayers, neuronsPerLayer, learningFactor):
-        self.neurons = [[Neuron() for j in range(neuronsPerLayer)] for i in range(numLayers)]
-        self.outputs = [Neuron() for i in range(numOutputs)]
+    def __init__(self, numOutputs, numLayers, neuronsPerLayer, learningFactor):
+        self.neurons = [[Neuron(neuronsPerLayer) for j in range(neuronsPerLayer)] for i in range(numLayers)]
+        self.outputs = [Neuron(neuronsPerLayer) for i in range(numOutputs)]
         self.learningFactor = learningFactor
 
     def feedForward(self, inputs):
@@ -63,9 +62,9 @@ class NeuralNet:
     def backpropogateErrors(self, correctOutputs):
         for i, neuron in enumerate(self.outputs):
             neuron.updateOutputError(correctOutputs[i])
-        for i,  neuron in enumerate(self.neurons[len(self.neurons) - 1]):
+        for i, neuron in enumerate(self.neurons[len(self.neurons) - 1]):
             neuron.updateError(self.outputs, i)
-        for i in range(len(self.neurons) - 1, 0, -1):
+        for i in range(len(self.neurons) - 2, -1, -1):
             for j, neuron in enumerate(self.neurons[i]):
                 neuron.updateError(self.neurons[i + 1], j)
 
@@ -91,20 +90,61 @@ class NeuralNet:
         maxActivation = 0.0
         indexOfMax = -1
         for i, neuron in enumerate(self.outputs):
-            if (neuron.value > maxActivation):
+            if neuron.value > maxActivation:
                 maxActivation = neuron.value
                 indexOfMax = i
         return indexOfMax
 
 
+targetClasses = set()
+targetClassList = list()
+trainingExamples = list()
+trainingExampleAnswers = list()
+testExamples = list()
+testExampleAnswers = list()
 
+trainingFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-training.data", "r")
+for row in trainingFile:
+    stringExample = row.split()
+    example = [float(num) for num in stringExample]
+    targetClass = example[len(example) - 1]
+    trainingExampleAnswers.append(targetClass)
+    targetClasses.add(targetClass)
+    del example[len(example) - 1]
+    trainingExamples.append(example)
+trainingFile.close()
 
+for target in targetClasses:
+    targetClassList.append(target)
+targetClassList.sort()
 
+testFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-test.data", "r")
+for row in testFile:
+    stringExample = row.split()
+    example = [float(num) for num in stringExample]
+    targetClass = example[len(example) - 1]
+    testExampleAnswers.append(targetClass)
+    del example[len(example) - 1]
+    testExamples.append(example)
+testFile.close()
 
+myNeuralNet = NeuralNet(len(targetClassList), 3, len(trainingExamples[0]), 0.05)
 
+for n in range(0, 10):
 
+    for k, example in enumerate(trainingExamples):
+        answers = [0.0] * len(targetClassList)
+        answers[targetClassList.index(trainingExampleAnswers[k])] = 1.0
+        myNeuralNet.learnFromExample(example, answers)
 
+    correctCount = 0
 
+    for m, example in enumerate(testExamples):
+        guess = myNeuralNet.classify(example)
+        if guess == targetClassList.index(testExampleAnswers[m]):
+            correctCount += 1
+
+    print(correctCount / len(testExamples))
 
 
 
