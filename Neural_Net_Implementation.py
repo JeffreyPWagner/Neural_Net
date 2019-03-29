@@ -2,15 +2,23 @@ import random
 import math
 import numpy as np
 
+# todo remove seed setter
 random.seed(0)
 
-
-def relu(value):
-    return np.maximum(value, 0)
+targetClasses = set()
+targetClassList = list()
+trainingExamples = list()
+trainingExampleAnswers = list()
+testExamples = list()
+testExampleAnswers = list()
 
 
 def sigmoid(value):
     return 1 / (1 + math.exp(-value))
+
+
+def normalize(value, minValue, maxValue):
+    return (value - minValue) / (maxValue - minValue)
 
 
 class Neuron:
@@ -34,7 +42,7 @@ class Neuron:
         sumProduct = 0.0
         for neuron in nextLayerNeurons:
             sumProduct += neuron.error * neuron.weights[neuronPosition]
-        self.error =self.value * (1 - self.value) * sumProduct
+        self.error = self.value * (1 - self.value) * sumProduct
 
     def updateOutputError(self, targetValue):
         self.error = self.value * (1 - self.value) * (targetValue - self.value)
@@ -46,10 +54,21 @@ class Neuron:
 
 
 class NeuralNet:
-    def __init__(self, numOutputs, numLayers, neuronsPerLayer, learningFactor):
-        self.neurons = [[Neuron(neuronsPerLayer) for j in range(neuronsPerLayer)] for i in range(numLayers)]
-        self.outputs = [Neuron(neuronsPerLayer) for i in range(numOutputs)]
+    def __init__(self, numInputs, numOutputs, numLayers, neuronsPerLayer, learningFactor, neuronStepDown):
+        self.neurons = []
+        self.outputs = []
         self.learningFactor = learningFactor
+
+        for i in range(0, numLayers):
+            self.neurons.append([])
+            for j in range(0, neuronsPerLayer - (i * neuronStepDown)):
+                if i == 0:
+                    self.neurons[i].append(Neuron(numInputs))
+                else:
+                    self.neurons[i].append(Neuron(neuronsPerLayer - ((i - 1) * neuronStepDown)))
+
+        for i in range(0, numOutputs):
+            self.outputs.append(Neuron(len(self.neurons[len(self.neurons) - 1])))
 
     def feedForward(self, inputs):
         for neuron in self.neurons[0]:
@@ -103,18 +122,6 @@ class NeuralNet:
         return indexOfMax
 
 
-targetClasses = set()
-targetClassList = list()
-trainingExamples = list()
-trainingExampleAnswers = list()
-testExamples = list()
-testExampleAnswers = list()
-
-
-def normalize(value, min, max):
-    return (value - min) / (max - min)
-
-
 trainingFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-training.data", "r")
 for row in trainingFile:
     stringExample = row.split()
@@ -142,10 +149,9 @@ for row in testFile:
     testExamples.append(newExample)
 testFile.close()
 
-myNeuralNet = NeuralNet(len(targetClassList), 1, len(trainingExamples[0]), 1)
+myNeuralNet = NeuralNet(len(trainingExamples[0]), len(targetClassList), 1, int(2 / 3 * (len(trainingExamples[0]) + len(targetClassList))), 1, 0)
 
 for n in range(0, 1000):
-
     for k, example in enumerate(trainingExamples):
         answers = [0.0] * len(targetClassList)
         answers[targetClassList.index(trainingExampleAnswers[k])] = 1.0
