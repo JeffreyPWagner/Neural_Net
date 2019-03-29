@@ -2,33 +2,33 @@ import random
 import math
 import numpy as np
 
-random.seed(1)
+random.seed(0)
 
 
 def relu(value):
     return np.maximum(value, 0)
 
 
-def bipolarSigmoid(value):
+def sigmoid(value):
     return 1 / (1 + math.exp(-value))
 
 
 class Neuron:
     def __init__(self, previousLayerLen):
-        self.bias = random.uniform(-0.05, 0.05)
+        self.bias = random.uniform(-0.1, 0.1)
         self.weights = []
         self.value = 0.0
         self.error = 0.0
 
         for i in range(0, previousLayerLen):
-            randomFloat = random.uniform(-0.05, 0.05)
+            randomFloat = random.uniform(-0.1, 0.1)
             self.weights.append(randomFloat)
 
     def updateValue(self, previousLayerValues):
         sumProduct = 0.0
         for i, value in enumerate(previousLayerValues):
             sumProduct += value * self.weights[i]
-        self.value = bipolarSigmoid(sumProduct + self.bias)
+        self.value = sigmoid(sumProduct + self.bias)
 
     def updateError(self, nextLayerNeurons, neuronPosition):
         sumProduct = 0.0
@@ -142,9 +142,9 @@ for row in testFile:
     testExamples.append(newExample)
 testFile.close()
 
-myNeuralNet = NeuralNet(len(targetClassList), 2, len(trainingExamples[0]), 0.1)
+myNeuralNet = NeuralNet(len(targetClassList), 1, len(trainingExamples[0]), 1)
 
-for n in range(0, 30):
+for n in range(0, 1000):
 
     for k, example in enumerate(trainingExamples):
         answers = [0.0] * len(targetClassList)
