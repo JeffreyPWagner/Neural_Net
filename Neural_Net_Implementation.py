@@ -1,6 +1,5 @@
 import random
 import math
-import numpy as np
 
 # todo remove seed setter
 random.seed(0)
@@ -149,7 +148,8 @@ for row in testFile:
     testExamples.append(newExample)
 testFile.close()
 
-myNeuralNet = NeuralNet(len(trainingExamples[0]), len(targetClassList), 1, int(2 / 3 * (len(trainingExamples[0]) + len(targetClassList))), 1, 0)
+myNetNeurons = int(2 / 3 * (len(trainingExamples[0]) + len(targetClassList)))
+myNeuralNet = NeuralNet(len(trainingExamples[0]), len(targetClassList), 1, myNetNeurons, 1, 0)
 
 for n in range(0, 1000):
     for k, example in enumerate(trainingExamples):
