@@ -2,9 +2,15 @@ import random
 import math
 import numpy as np
 
+random.seed(1)
 
-def sigmoid(value):
+
+def relu(value):
     return np.maximum(value, 0)
+
+
+def bipolarSigmoid(value):
+    return 1 / (1 + math.exp(-value))
 
 
 class Neuron:
@@ -22,14 +28,13 @@ class Neuron:
         sumProduct = 0.0
         for i, value in enumerate(previousLayerValues):
             sumProduct += value * self.weights[i]
-        self.value = sigmoid(sumProduct + self.bias)
+        self.value = bipolarSigmoid(sumProduct + self.bias)
 
     def updateError(self, nextLayerNeurons, neuronPosition):
         sumProduct = 0.0
         for neuron in nextLayerNeurons:
             sumProduct += neuron.error * neuron.weights[neuronPosition]
-            # todo remove 0.01 here and below
-        self.error = self.value * (1 - self.value) * sumProduct
+        self.error =self.value * (1 - self.value) * sumProduct
 
     def updateOutputError(self, targetValue):
         self.error = self.value * (1 - self.value) * (targetValue - self.value)
@@ -110,7 +115,7 @@ def normalize(value, min, max):
     return (value - min) / (max - min)
 
 
-trainingFile = open(r"C:\Users\jeffp\Documents\GitHub\Neural_Net\digits-training.data", "r")
+trainingFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-training.data", "r")
 for row in trainingFile:
     stringExample = row.split()
     example = [float(num) for num in stringExample]
@@ -126,7 +131,7 @@ for target in targetClasses:
     targetClassList.append(target)
 targetClassList.sort()
 
-testFile = open(r"C:\Users\jeffp\Documents\GitHub\Neural_Net\digits-test.data", "r")
+testFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-test.data", "r")
 for row in testFile:
     stringExample = row.split()
     example = [float(num) for num in stringExample]
