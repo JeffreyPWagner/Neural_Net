@@ -1,20 +1,21 @@
 import random
 import math
+import numpy as np
 
 
 def sigmoid(value):
-    return 1 / (1 + math.exp(value))
+    return np.maximum(value, 0)
 
 
 class Neuron:
     def __init__(self, previousLayerLen):
-        self.bias = random.uniform(-0.1, 0.1)
+        self.bias = random.uniform(-0.05, 0.05)
         self.weights = []
         self.value = 0.0
         self.error = 0.0
 
         for i in range(0, previousLayerLen):
-            randomFloat = random.uniform(-0.1, 0.1)
+            randomFloat = random.uniform(-0.05, 0.05)
             self.weights.append(randomFloat)
 
     def updateValue(self, previousLayerValues):
@@ -27,6 +28,7 @@ class Neuron:
         sumProduct = 0.0
         for neuron in nextLayerNeurons:
             sumProduct += neuron.error * neuron.weights[neuronPosition]
+            # todo remove 0.01 here and below
         self.error = self.value * (1 - self.value) * sumProduct
 
     def updateOutputError(self, targetValue):
@@ -103,7 +105,12 @@ trainingExampleAnswers = list()
 testExamples = list()
 testExampleAnswers = list()
 
-trainingFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-training.data", "r")
+
+def normalize(value, min, max):
+    return (value - min) / (max - min)
+
+
+trainingFile = open(r"C:\Users\jeffp\Documents\GitHub\Neural_Net\digits-training.data", "r")
 for row in trainingFile:
     stringExample = row.split()
     example = [float(num) for num in stringExample]
@@ -111,26 +118,28 @@ for row in trainingFile:
     trainingExampleAnswers.append(targetClass)
     targetClasses.add(targetClass)
     del example[len(example) - 1]
-    trainingExamples.append(example)
+    newExample = [normalize(value, 0, 9) for value in example]
+    trainingExamples.append(newExample)
 trainingFile.close()
 
 for target in targetClasses:
     targetClassList.append(target)
 targetClassList.sort()
 
-testFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-test.data", "r")
+testFile = open(r"C:\Users\jeffp\Documents\GitHub\Neural_Net\digits-test.data", "r")
 for row in testFile:
     stringExample = row.split()
     example = [float(num) for num in stringExample]
     targetClass = example[len(example) - 1]
     testExampleAnswers.append(targetClass)
     del example[len(example) - 1]
-    testExamples.append(example)
+    newExample = [normalize(value, 0, 9) for value in example]
+    testExamples.append(newExample)
 testFile.close()
 
-myNeuralNet = NeuralNet(len(targetClassList), 3, len(trainingExamples[0]), 0.05)
+myNeuralNet = NeuralNet(len(targetClassList), 2, len(trainingExamples[0]), 0.1)
 
-for n in range(0, 10):
+for n in range(0, 30):
 
     for k, example in enumerate(trainingExamples):
         answers = [0.0] * len(targetClassList)
@@ -145,8 +154,6 @@ for n in range(0, 10):
             correctCount += 1
 
     print(correctCount / len(testExamples))
-
-
 
 
 
