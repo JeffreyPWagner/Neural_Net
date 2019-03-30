@@ -1,5 +1,7 @@
 import random
 import math
+from sklearn.metrics import confusion_matrix
+import pandas as pd
 
 # todo remove seed setter
 random.seed(0)
@@ -7,17 +9,28 @@ random.seed(0)
 targetClasses = set()
 targetClassList = list()
 trainingExamples = list()
+rawTrainingExamples = list()
 trainingExampleAnswers = list()
 testExamples = list()
+rawTestExamples = list()
 testExampleAnswers = list()
 
 
-def sigmoid(value):
-    return 1 / (1 + math.exp(-value))
+# this method copied from https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float
+def checkNumber(inputString):
+    try:
+        int(inputString)
+        return True
+    except ValueError:
+        return False
 
 
-def normalize(value, minValue, maxValue):
-    return (value - minValue) / (maxValue - minValue)
+def sigmoid(val):
+    return 1 / (1 + math.exp(-val))
+
+
+def normalize(val, minValue, maxValue):
+    return (val - minValue) / (maxValue - minValue)
 
 
 class Neuron:
@@ -33,8 +46,8 @@ class Neuron:
 
     def updateValue(self, previousLayerValues):
         sumProduct = 0.0
-        for i, value in enumerate(previousLayerValues):
-            sumProduct += value * self.weights[i]
+        for i, val in enumerate(previousLayerValues):
+            sumProduct += val * self.weights[i]
         self.value = sigmoid(sumProduct + self.bias)
 
     def updateError(self, nextLayerNeurons, neuronPosition):
@@ -47,8 +60,8 @@ class Neuron:
         self.error = self.value * (1 - self.value) * (targetValue - self.value)
 
     def updateWeightsAndBias(self, learningFactor, previousLayerValues):
-        for i, value in enumerate(previousLayerValues):
-            self.weights[i] = self.weights[i] + learningFactor * self.error * value
+        for i, val in enumerate(previousLayerValues):
+            self.weights[i] = self.weights[i] + learningFactor * self.error * val
         self.bias = self.bias + learningFactor * self.error * self.bias
 
 
@@ -121,51 +134,83 @@ class NeuralNet:
         return indexOfMax
 
 
+inputValuesSet = set()
+inputValuesList = list()
+inputValuesDict = dict()
+
 trainingFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-training.data", "r")
 for row in trainingFile:
-    stringExample = row.split()
-    example = [float(num) for num in stringExample]
+    example = row.split()
     targetClass = example[len(example) - 1]
     trainingExampleAnswers.append(targetClass)
     targetClasses.add(targetClass)
     del example[len(example) - 1]
-    newExample = [normalize(value, 0, 9) for value in example]
-    trainingExamples.append(newExample)
+    if checkNumber(example[0]):
+        example = [float(num) for num in example]
+    for value in example:
+        inputValuesSet.add(value)
+    rawTrainingExamples.append(example)
 trainingFile.close()
+
+testFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-test.data", "r")
+for row in testFile:
+    example = row.split()
+    targetClass = example[len(example) - 1]
+    testExampleAnswers.append(targetClass)
+    del example[len(example) - 1]
+    if checkNumber(example[0]):
+        example = [float(num) for num in example]
+    for value in example:
+        inputValuesSet.add(value)
+    rawTestExamples.append(example)
+testFile.close()
 
 for target in targetClasses:
     targetClassList.append(target)
 targetClassList.sort()
 
-testFile = open(r"C:\Users\jeffp\OneDrive\Documents\GitHub\Neural_Net\digits-test.data", "r")
-for row in testFile:
-    stringExample = row.split()
-    example = [float(num) for num in stringExample]
-    targetClass = example[len(example) - 1]
-    testExampleAnswers.append(targetClass)
-    del example[len(example) - 1]
-    newExample = [normalize(value, 0, 9) for value in example]
-    testExamples.append(newExample)
-testFile.close()
+for value in inputValuesSet:
+    inputValuesList.append(value)
+inputValuesList.sort()
+
+for p, value in enumerate(inputValuesList):
+    inputValuesDict[value] = p
+
+for example in rawTrainingExamples:
+    numericExample = [inputValuesDict[value] for value in example]
+    normalizedExample = [normalize(value, 0, 16) for value in numericExample]
+    trainingExamples.append(normalizedExample)
+
+for example in rawTestExamples:
+    numericExample = [inputValuesDict[value] for value in example]
+    normalizedExample = [normalize(value, 0, 16) for value in numericExample]
+    testExamples.append(normalizedExample)
 
 myNetNeurons = int(2 / 3 * (len(trainingExamples[0]) + len(targetClassList)))
 myNeuralNet = NeuralNet(len(trainingExamples[0]), len(targetClassList), 1, myNetNeurons, 1, 0)
 
-for n in range(0, 1000):
+for n in range(0, 15):
     for k, example in enumerate(trainingExamples):
         answers = [0.0] * len(targetClassList)
         answers[targetClassList.index(trainingExampleAnswers[k])] = 1.0
         myNeuralNet.learnFromExample(example, answers)
 
-    correctCount = 0
+correctCount = 0
 
+guessList = list()
+
+with open("results.txt", 'w') as f:
     for m, example in enumerate(testExamples):
         guess = myNeuralNet.classify(example)
-        if guess == targetClassList.index(testExampleAnswers[m]):
-            correctCount += 1
+        f.write(targetClassList[guess] + '\n')
+        guessList.append(targetClassList[guess])
+        if testExampleAnswers[m] in targetClassList:
+            if guess == targetClassList.index(testExampleAnswers[m]):
+                correctCount += 1
 
-    print(correctCount / len(testExamples))
-
+cm = confusion_matrix(testExampleAnswers, guessList, labels=targetClassList)
+cmDataFrame = pd.DataFrame(cm, index=targetClassList, columns=targetClassList)
+print(cmDataFrame)
 
 
 
