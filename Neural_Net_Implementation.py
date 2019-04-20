@@ -3,8 +3,6 @@ import math
 from sklearn.metrics import confusion_matrix
 import pandas as pd
 
-random.seed(0)
-
 # set of possible target classes
 targetClasses = set()
 

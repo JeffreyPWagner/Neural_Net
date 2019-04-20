@@ -1,6 +1,6 @@
-Accuracy: '96.55%'
+Accuracy: '96.05%'
 
-Final Validation Accuracy: '96.07%'
+Final Validation Accuracy: '93.98%'
 
-Final Average Mean Squared Error: '0.28%'
+Final Average Mean Squared Error: '0.91%'
 

@@ -1,0 +1,6 @@
+Accuracy: '100.00%'
+
+Final Validation Accuracy: '0.00%'
+
+Final Average Mean Squared Error: '50.62%'
+
